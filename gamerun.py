@@ -8,10 +8,13 @@ trqVal = 0
 trqt = 0
 changle = 0
 tempmax = 0
-def cusEve(temp):
+def cusEve(temp,camera):
     global trqVal,changle,tempmax,trqt
+
+    #camera
+    camera[0] = -car1.carBody.position[0] + 85
     car1.carBody.torque = trqVal
-    # car1.whBdyB.torque = trqt
+    car1.whBdyB.torque = trqt
     # tempmax = max(tempmax,car1.bwmot.impulse/(10/30/500))
     # print(tempmax)
     # car1.carBody.angle += changle*math.pi/180
@@ -27,12 +30,11 @@ def cusEve(temp):
             if event.key == pygame.K_RIGHT:
                 # trqVal += -100
                 space.add(car1.bwmot)
-                car1.bwmot.rate = -1
+                car1.bwmot.rate = -2
                 print(car1.bwmot.impulse)
             if event.key == pygame.K_LEFT:
-                trqt = 5000
-                # space.add(car1.bwmot)
-                # car1.bwmot.rate = 1
+                space.add(car1.bwmot)
+                car1.bwmot.rate = 2
             if event.key == pygame.K_j:
                 # bdy.velocity = bdy.rotation_vector*10
                 car1.carBody.velocity = (0,100)
@@ -48,12 +50,13 @@ def cusEve(temp):
             if event.key == pygame.K_q or event.key == pygame.K_e:
                 changle = 0
                 trqVal = 0
-            if event.key == pygame.K_RIGHT or event.key == pygame.K_LEFT:
+            if event.key == pygame.K_RIGHT:
                 # trqt = 0
                 # pass
                 # print(car1.bwmot.impulse)
                 space.remove(car1.bwmot)
-            
+            if  event.key == pygame.K_LEFT:
+                space.remove(car1.bwmot)
             
         # print(car1.whBdyB.torque)
         
@@ -63,14 +66,14 @@ def cusEve(temp):
 # driver code
 spaList = []
 
-segFloor = pymunk.Segment(space.static_body,(0,10),(500,10),5)
-segFloor.elasticity = 0.9
-segFloor.friction = 0.9
-spaList.append(segFloor)
+# segFloor = pymunk.Segment(space.static_body,(0,10),(500,10),5)
+# segFloor.elasticity = 0.9
+# segFloor.friction = 0.9
+# spaList.append(segFloor)
 
-segF = pymunk.Segment(space.static_body,(500,10),(600,50),5)
-segF.friction = 0.8
-spaList.append(segF)
+# segF = pymunk.Segment(space.static_body,(500,10),(600,50),5)
+# segF.friction = 0.8
+# spaList.append(segF)
 
 # bdy = pymunk.Body()
 # bdy.position = 250,250
@@ -85,7 +88,8 @@ car1 = Car((250,250))
 
 
 space.add(spaList)
-app = App(sH=500)
+Terrain(10000)
+app = App(sH=500,aH=500)
 app.custEvent = cusEve
 app.run()
 
