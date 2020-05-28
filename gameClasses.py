@@ -132,8 +132,8 @@ class Terrain:
             space.add(seg)
 
     def terra(self, leng):
-        ls = [(0, 10), (200, 10)]
-        for i in range(200, leng+100, 100):
+        ls = [(0, 10), (100, 10)]
+        for i in range(100, leng+100, 100):
             j = r.randint(10, 80)
             ls.append((i, j))
         return ls
