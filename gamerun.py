@@ -10,6 +10,16 @@ trqt = 0
 changle = 0
 tempmax = 0
 
+segType =type(pymunk.Segment(None,(0,0),(0,0),0))
+
+def air_land(las,curr):
+    if not las == curr:
+        if curr:
+            print('changed to air')
+        else:
+            print('changed to land')
+
+
 
 def cusEve(temp, camera):
     global trqVal, changle, tempmax, trqt
@@ -18,9 +28,25 @@ def cusEve(temp, camera):
     camera[0] = -car1.carBody.position[0] + 85
     car1.carBody.torque = trqVal
     car1.whBdyB.torque = trqt
-    # tempmax = max(tempmax,car1.bwmot.impulse/(10/30/500))
-    # print(tempmax)
-    # car1.carBody.angle += changle*math.pi/180
+    
+    lisb = space.bb_query(car1.wShapeB.bb,car1.wShapeB.filter)
+    flag = False
+    for i in lisb:
+        if type(i) == segType:   
+            flag = True
+            break
+    
+    if not flag:
+        lisf = space.bb_query(car1.wShapeF.bb,car1.wShapeB.filter)
+        for i in lisf:
+                if type(i) == segType:   
+                    flag = True
+                    break   
+    car1.carAirLas = car1.carAirCurr
+    car1.carAirCurr = not flag
+    air_land(car1.carAirLas,car1.carAirCurr)
+
+
     for event in temp:
 
         if event.type == pygame.KEYDOWN:
@@ -34,10 +60,16 @@ def cusEve(temp, camera):
                 # trqVal += -100
                 space.add(car1.bwmot)
                 car1.bwmot.rate = -2
-                print(car1.bwmot.impulse)
+                trqVal = 2000000
+                
             if event.key == pygame.K_LEFT:
                 space.add(car1.bwmot)
                 car1.bwmot.rate = 2
+                trqVal = -2000000
+            
+            if event.key == pygame.K_x:
+                car1.bwmot.rate *= 5 
+
             if event.key == pygame.K_j:
                 # ttt = Vec2d(-bdy.rotation_vector[1],bdy.rotation_vector[0])
                 # bdy.velocity = ttt*10
@@ -47,22 +79,21 @@ def cusEve(temp, camera):
 
             if event.key == pygame.K_q:
                 changle = 5
-                trqVal = 1000000
+                trqVal = 2000000
             if event.key == pygame.K_e:
                 changle = -5
-                trqVal = -1000000
+                trqVal = -2000000
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_q or event.key == pygame.K_e:
                 changle = 0
                 trqVal = 0
             if event.key == pygame.K_RIGHT:
-                # trqt = 0
-                # pass
-                # print(car1.bwmot.impulse)
+                trqVal = 0
                 space.remove(car1.bwmot)
             if event.key == pygame.K_LEFT:
                 space.remove(car1.bwmot)
+                trqVal = 0
 
         # print(car1.whBdyB.torque)
 
@@ -82,6 +113,8 @@ spaList = []
 # segF.friction = 0.8
 # spaList.append(segF)
 
+# Next TODO: smooth terrain using peril noise, controls change(most work with only L or R)
+
 # bdy = pymunk.Body()
 # bdy.position = 250,280
 # spe = pymunk.Poly.create_box(bdy,(100,50))
@@ -90,12 +123,13 @@ spaList = []
 # spe.elasticity = 0.9
 # spaList.append((spe,bdy))
 
-car1 = Car((250, 250))
+car1 = Car((250, 250),whFric=1.5,moment=10)
 # car1.bwmot.max_force = 5
 
+tlength = 10000
 
 space.add(spaList)
-Terrain(10000)
-app = App(sH=500, aH=500)
+Terrain(tlength,persistence= 1.8,lacunarity=5.0,octaves=2)
+app = App(sH=500, aH=500,aL=tlength)
 app.custEvent = cusEve
 app.run()

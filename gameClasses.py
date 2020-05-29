@@ -2,14 +2,15 @@ import pygame
 import pymunk
 import pymunk.pygame_util
 import random as r
-
+import noise
 
 space = pymunk.Space()
 space.gravity = 0, -9.8
-fps = 30
+fps = 40
 sSpeed = 10
 steps = 50*sSpeed
 
+mfps = 100
 
 class App:
 
@@ -20,6 +21,7 @@ class App:
         self.atulSize = (aL, aH)
         self.backGround = pygame.Surface(self.atulSize)
         self.drawOptions = pymunk.pygame_util.DrawOptions(self.backGround)
+        # self.drawOptions.flags = pymunk.SpaceDebugDrawOptions.DRAW_SHAPES
         self.running = True
         self.clock = pygame.time.Clock()
         self.custEvent = None
@@ -40,6 +42,7 @@ class App:
                 sSpeed = 10
 
     def run(self):
+        global mfps
         camera = pygame.Vector2(0, 0)
         while self.running:
             temp = pygame.event.get()
@@ -58,6 +61,10 @@ class App:
             self.clock.tick(fps)
             for i in range(steps):
                 space.step(sSpeed/fps/steps)
+            # if mfps == 0.0:
+            #     mfps = 100
+            # mfps = min(mfps,self.clock.get_fps())
+            # print("fps:",self.clock.get_fps(),mfps)
 
 
 class Car:
@@ -65,6 +72,10 @@ class Car:
     def __init__(self, pos, weight=10, inSpeed=0, wheelW=10, whElast=0.2, whFric=0.9, wheelS=10, wheelM=1, moment=100, color=(200, 200, 250), chSize=(100, 50), whstiff=14, whdamp=5):
 
         self.ls = []
+
+        #car air status
+        self.carAirLas = True
+        self.carAirCurr = True
 
         # car Chasis
         self.carBody = pymunk.Body(weight, moment)
@@ -106,14 +117,11 @@ class Car:
         self.bwmot = pymunk.constraint.SimpleMotor(
             self.whBdyB, space.static_body, inSpeed)
         self.ls.append((self.whBdyB, self.wShapeB, self.bwJntG, self.bwJntS))
-        # jump
-        # self.fjnpb = pymunk.Body()
-        # self.fjnpb.position = (0,-(chSize[1]/2))
 
         self.bwJntG.max_force = 1000
         self.fwJntG.max_force = 1000
 
-        # space opject add
+        # space object add
         space.add(self.ls)
 
     def carDes(self):
@@ -122,18 +130,26 @@ class Car:
 
 class Terrain:
 
-    def __init__(self, lent):
-        self.tLis = self.terra(lent)
+    def __init__(self, lent,octaves = 1,lacunarity = 2,persistence = 0.5,friction = 0.9):
+        self.tLis = self.terra(lent,octaves,lacunarity,persistence)
         noSegs = len(self.tLis)
         for j in range(noSegs-1):
             seg = pymunk.Segment(space.static_body, self.tLis[j], self.tLis[j+1], 5)
-            seg.friction = 0.9
+            seg.friction = friction
             seg.elasticity = 0.5
             space.add(seg)
 
-    def terra(self, leng):
+    def terra(self, leng,octaves,lacunarity,persistence):
         ls = [(0, 10), (100, 10)]
-        for i in range(100, leng+100, 100):
-            j = r.randint(10, 80)
+
+        #file
+        file = open('test.txt','w')
+
+        for i in range(110, leng+100, 10):
+            # j = r.randint(10, 80)
+            jt =(noise.pnoise1(i/1000,octaves = octaves,lacunarity = lacunarity,persistence = persistence))
+            j = jt*100+100
+            file.write('{:.2f}\t{:.3f}\n'.format(j,jt))
             ls.append((i, j))
+        file.close()
         return ls
