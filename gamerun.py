@@ -12,11 +12,8 @@ tempmax = 0
 segType =type(pymunk.Segment(None,(0,0),(0,0),0))
 
 def air_land(las,curr):
-    if not las == curr:
-        if curr:
-            print('changed to air')
-        else:
-            print('changed to land')
+    if not las == curr:    
+        car1.air_land_trans(not curr)
 
 
 

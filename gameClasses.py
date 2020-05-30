@@ -12,6 +12,7 @@ steps = 50*sSpeed
 
 mfps = 100
 
+
 class App:
 
     def __init__(self, sL=700, sH=240, aL=10000, aH=240):
@@ -73,11 +74,11 @@ class Car:
 
         self.ls = []
 
-        #car air status
+        # car air status
         self.carAirLas = True
         self.carAirCurr = True
 
-        #torque needed to apply
+        # torque needed to apply
         self.torqNeed = 0
 
         # car Chasis
@@ -126,20 +127,37 @@ class Car:
 
         # space object add
         space.add(self.ls)
-    
-    def carMov(self,dir):
 
-        f = False
+    def air_land_trans(self, a2l):
+        if a2l:
+            if self.torqNeed != 0:
+                space.add(self.bwmot)
+                if self.torqNeed < 0:
+                    self.bwmot.rate = 2
+                else:
+                    self.bwmot.rate = -2
+                self.torqNeed = 0
+        else:
+            if self.motChk():
+                if self.bwmot.rate > 0:
+                    self.torqNeed = -2000000
+                else:
+                    self.torqNeed = 2000000
+                space.remove(self.bwmot)
+
+    def motChk(self):
+        for i in space.constraints:
+            if i == self.bwmot:
+                return True
+        return False
+
+    def carMov(self, dir):
+
         if dir == 0:
             self.torqNeed = 0
-            for i in space.constraints:
-                if i == self.bwmot:
-                    f = True
-                    break;
-            if f:
+            if self.motChk():
                 space.remove(self.bwmot)
-                print("here")
-                
+
         elif self.carAirCurr:
             if dir == 1:
                 self.torqNeed = -2000000
@@ -148,14 +166,13 @@ class Car:
         else:
             for i in space.constraints:
                 if i == self.bwmot:
-                    break;
+                    break
             else:
                 space.add(self.bwmot)
             if dir == 1:
                 self.bwmot.rate = 2
             elif dir == -1:
                 self.bwmot.rate = -2
-        
 
     def carDes(self):
         space.remove(self.ls)
@@ -163,24 +180,26 @@ class Car:
 
 class Terrain:
 
-    def __init__(self, lent,octaves = 1,lacunarity = 2,persistence = 0.5,friction = 0.9):
-        self.tLis = self.terra(lent,octaves,lacunarity,persistence)
+    def __init__(self, lent, octaves=1, lacunarity=2, persistence=0.5, friction=0.9):
+        self.tLis = self.terra(lent, octaves, lacunarity, persistence)
         noSegs = len(self.tLis)
         for j in range(noSegs-1):
-            seg = pymunk.Segment(space.static_body, self.tLis[j], self.tLis[j+1], 5)
+            seg = pymunk.Segment(
+                space.static_body, self.tLis[j], self.tLis[j+1], 5)
             seg.friction = friction
             seg.elasticity = 0.5
             space.add(seg)
 
-    def terra(self, leng,octaves,lacunarity,persistence):
+    def terra(self, leng, octaves, lacunarity, persistence):
         ls = [(0, 10), (100, 10)]
 
-        #file
+        # file
         # file = open('test.txt','w')
 
         for i in range(110, leng+100, 10):
             # j = r.randint(10, 80)
-            jt =(noise.pnoise1(i/1000,octaves = octaves,lacunarity = lacunarity,persistence = persistence))
+            jt = (noise.pnoise1(i/1000, octaves=octaves,
+                                lacunarity=lacunarity, persistence=persistence))
             j = jt*100+100
             # file.write('{:.2f}\t{:.3f}\n'.format(j,jt))
             ls.append((i, j))
