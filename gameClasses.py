@@ -77,6 +77,9 @@ class Car:
         self.carAirLas = True
         self.carAirCurr = True
 
+        #torque needed to apply
+        self.torqNeed = 0
+
         # car Chasis
         self.carBody = pymunk.Body(weight, moment)
         self.carBody.position = pos
@@ -123,6 +126,36 @@ class Car:
 
         # space object add
         space.add(self.ls)
+    
+    def carMov(self,dir):
+
+        f = False
+        if dir == 0:
+            self.torqNeed = 0
+            for i in space.constraints:
+                if i == self.bwmot:
+                    f = True
+                    break;
+            if f:
+                space.remove(self.bwmot)
+                print("here")
+                
+        elif self.carAirCurr:
+            if dir == 1:
+                self.torqNeed = -2000000
+            elif dir == -1:
+                self.torqNeed = 2000000
+        else:
+            for i in space.constraints:
+                if i == self.bwmot:
+                    break;
+            else:
+                space.add(self.bwmot)
+            if dir == 1:
+                self.bwmot.rate = 2
+            elif dir == -1:
+                self.bwmot.rate = -2
+        
 
     def carDes(self):
         space.remove(self.ls)
@@ -143,13 +176,13 @@ class Terrain:
         ls = [(0, 10), (100, 10)]
 
         #file
-        file = open('test.txt','w')
+        # file = open('test.txt','w')
 
         for i in range(110, leng+100, 10):
             # j = r.randint(10, 80)
             jt =(noise.pnoise1(i/1000,octaves = octaves,lacunarity = lacunarity,persistence = persistence))
             j = jt*100+100
-            file.write('{:.2f}\t{:.3f}\n'.format(j,jt))
+            # file.write('{:.2f}\t{:.3f}\n'.format(j,jt))
             ls.append((i, j))
-        file.close()
+        # file.close()
         return ls

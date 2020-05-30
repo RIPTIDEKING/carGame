@@ -5,7 +5,6 @@ import pygame
 import math
 
 # functions
-trqVal = 0
 trqt = 0
 changle = 0
 tempmax = 0
@@ -22,11 +21,12 @@ def air_land(las,curr):
 
 
 def cusEve(temp, camera):
-    global trqVal, changle, tempmax, trqt
+    global changle, tempmax, trqt
+
 
     # camera
     camera[0] = -car1.carBody.position[0] + 85
-    car1.carBody.torque = trqVal
+    car1.carBody.torque = car1.torqNeed
     car1.whBdyB.torque = trqt
     
     lisb = space.bb_query(car1.wShapeB.bb,car1.wShapeB.filter)
@@ -53,52 +53,27 @@ def cusEve(temp, camera):
             if event.key == pygame.K_b:
                 bdy.position = 198, 250
                 bdy.velocity = pymunk.Vec2d(0, 0)
-            if event.key == pygame.K_SPACE:
+            elif event.key == pygame.K_SPACE:
                 car1.carDes()
                 car1.__init__((250, 250))
-            if event.key == pygame.K_RIGHT:
-                # trqVal += -100
-                space.add(car1.bwmot)
-                car1.bwmot.rate = -2
-                trqVal = 2000000
-                
-            if event.key == pygame.K_LEFT:
-                space.add(car1.bwmot)
-                car1.bwmot.rate = 2
-                trqVal = -2000000
-            
-            if event.key == pygame.K_x:
+            elif event.key == pygame.K_RIGHT:
+                car1.carMov(-1)    
+            elif event.key == pygame.K_LEFT:
+                car1.carMov(1)
+            elif event.key == pygame.K_x:
                 car1.bwmot.rate *= 5 
-
-            if event.key == pygame.K_j:
-                # ttt = Vec2d(-bdy.rotation_vector[1],bdy.rotation_vector[0])
-                # bdy.velocity = ttt*10
+            elif event.key == pygame.K_j:
                 prepMul = Vec2d(
                     (-car1.carBody.rotation_vector[1], car1.carBody.rotation_vector[0]))
                 car1.carBody.velocity = prepMul*100
 
-            if event.key == pygame.K_q:
-                changle = 5
-                trqVal = 2000000
-            if event.key == pygame.K_e:
-                changle = -5
-                trqVal = -2000000
-
         if event.type == pygame.KEYUP:
-            if event.key == pygame.K_q or event.key == pygame.K_e:
-                changle = 0
-                trqVal = 0
-            if event.key == pygame.K_RIGHT:
-                trqVal = 0
-                space.remove(car1.bwmot)
-            if event.key == pygame.K_LEFT:
-                space.remove(car1.bwmot)
-                trqVal = 0
-
-        # print(car1.whBdyB.torque)
-
-        # bdy.angle += changle*math.pi/180
-        # print("{:.2f}".format(bdy.angle*(180/math.pi)),bdy.rotation_vector)
+           
+            if event.key == pygame.K_RIGHT or event.key == pygame.K_LEFT:
+                car1.carMov(0)
+            if event.key == pygame.K_x:
+                car1.bwmot.rate /= 5
+       
 
 
 # driver code
