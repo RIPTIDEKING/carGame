@@ -282,7 +282,6 @@ def main():
         screen.blit(font.render("Move with Left/Right, jump with Up, press again to double jump", 1, THECOLORS["darkgrey"]), (5,height - 35))
         screen.blit(font.render("Press ESC or Q to quit", 1, THECOLORS["darkgrey"]), (5,height - 20))
         screen.blit(img, p, (animation_offset, direction_offset, 32, 48))
-       
         pygame.display.update()
         frame_number += 1
         

@@ -4,6 +4,14 @@ import pymunk.pygame_util
 import random as r
 import noise
 
+from math import degrees
+
+
+height = 500
+width = 700
+screenSizes = (height, width)
+
+
 space = pymunk.Space()
 space.gravity = 0, -9.8
 fps = 40
@@ -11,6 +19,21 @@ sSpeed = 10
 steps = 50*sSpeed
 
 mfps = 100
+
+
+#colors
+fWhite = (250,250,250)
+white = (255,255,255)
+black = (10,10,10)
+red = (250,0,0)
+green = (0,250,0)
+blue = (0,0,250)
+grassCol = (86,125,70)
+
+
+# images
+tire = pygame.image.load("res/tireMade.png")
+chasis = pygame.image.load("res/chasis.png")
 
 
 class App:
@@ -26,6 +49,16 @@ class App:
         self.running = True
         self.clock = pygame.time.Clock()
         self.custEvent = None
+
+    def spritHand(self, img, bdy, size=None):
+        imgRot = img
+        if not size == None:
+            spt = pygame.transform.scale(img, size)
+            imgRot = spt
+        spt = pygame.transform.rotate(imgRot, degrees(bdy.angle))
+        rect = spt.get_rect()
+        rect.center = (bdy.position[0], self.screenSize[1]-bdy.position[1])
+        self.backGround.blit(spt, rect)
 
     def event_handler(self, event):
         global sSpeed
@@ -47,16 +80,19 @@ class App:
         camera = pygame.Vector2(0, 0)
         while self.running:
             temp = pygame.event.get()
+            self.screen.fill((250, 250, 250))
+            self.backGround.fill((250, 250, 250))
+            space.debug_draw(self.drawOptions)
 
             for event in temp:
                 self.event_handler(event)
             if not self.custEvent == None:
                 self.custEvent(temp, camera)
 
-            self.screen.fill((250, 250, 250))
-            self.backGround.fill((250, 250, 250))
-            space.debug_draw(self.drawOptions)
             self.screen.blit(self.backGround, camera)
+            pygame.display.set_caption(
+                "fps: {:.1f}".format(self.clock.get_fps()))
+
             pygame.display.update()
 
             self.clock.tick(fps)
@@ -70,7 +106,7 @@ class App:
 
 class Car:
 
-    def __init__(self, pos, weight=10, inSpeed=0, wheelW=10, whElast=0.2, whFric=0.9, wheelS=10, wheelM=1, moment=100, color=(200, 200, 250), chSize=(100, 50), whstiff=14, whdamp=5):
+    def __init__(self, pos, weight=10, inSpeed=0, wheelW=10, whElast=0.2, whFric=0.9, wheelSF=10, wheelSB=10, wheelM=1, moment=100, color=(200, 200, 250), chSize=(100, 50), whstiff=14, whdamp=5):
 
         self.ls = []
 
@@ -84,8 +120,8 @@ class Car:
         # car Chasis
         self.carBody = pymunk.Body(weight, moment)
         self.carBody.position = pos
-        self.carVertex = [(-chSize[0]/2, -chSize[1]/2), (-chSize[0]/2, chSize[1]/2),
-                          (chSize[0]/2, chSize[1]/2), (chSize[0]/2, -chSize[1]/2)]
+        self.carVertex = [(-chSize[0]/2, -chSize[1]/2), (-chSize[0]/2, 5),
+                          (chSize[0]/2, 5), (chSize[0]/2, -chSize[1]/2)]
         self.chs = pymunk.Poly(self.carBody, (self.carVertex))
         self.chs.color = color
         self.chs.elasticity = 0.1
@@ -95,29 +131,28 @@ class Car:
         # car Front Wheel
         self.whBdyF = pymunk.Body(wheelW, moment=wheelM)
         self.whBdyF.position = pos[0] + \
-            (chSize[0]/2)-10, pos[1]+(-chSize[1]/2)-2*wheelS
-        self.wShapeF = pymunk.Circle(self.whBdyF, wheelS)
+            (chSize[0]/2)-10, pos[1]+(-chSize[1]/2)-2*wheelSF
+        self.wShapeF = pymunk.Circle(self.whBdyF, wheelSF)
         self.wShapeF.elasticity = whElast
         self.wShapeF.friction = whFric
         self.fwJntG = pymunk.constraint.GrooveJoint(
-            self.carBody, self.whBdyF, ((chSize[0]/2)-10, -chSize[1]/2), ((chSize[0]/2)-10, (-chSize[1]/2)-(2*wheelS)), (0, 0))
+            self.carBody, self.whBdyF, ((chSize[0]/2)-10, -chSize[1]/2), ((chSize[0]/2)-10, (-chSize[1]/2)-(2*wheelSF)), (0, 0))
         self.fwJntS = pymunk.constraint.DampedSpring(self.carBody, self.whBdyF, ((
-            chSize[0]/2)-10, -chSize[1]/2), (0, 0), 2*wheelS, whstiff, whdamp)
+            chSize[0]/2)-10, -chSize[1]/2), (0, 0), 2*wheelSF, whstiff, whdamp)
 
         self.ls.append((self.whBdyF, self.wShapeF, self.fwJntG, self.fwJntS))
 
         # car Back Wheel
         self.whBdyB = pymunk.Body(wheelW, moment=10)
         self.whBdyB.position = pos[0] + \
-            (-chSize[0]/2)+10, pos[1]+(-chSize[1]/2)-2*wheelS
-        self.wShapeB = pymunk.Circle(self.whBdyB, wheelS)
-        # self.wShapeB.weight = wheelW
+            (-chSize[0]/2)+10, pos[1]+(-chSize[1]/2)-2*wheelSB
+        self.wShapeB = pymunk.Circle(self.whBdyB, wheelSB)
         self.wShapeB.elasticity = whElast
         self.wShapeB.friction = whFric
         self.bwJntG = pymunk.constraint.GrooveJoint(
-            self.carBody, self.whBdyB, ((-chSize[0]/2)+10, -chSize[1]/2), ((-chSize[0]/2)+10, (-chSize[1]/2)-(2*wheelS)), (0, 0))
+            self.carBody, self.whBdyB, ((-chSize[0]/2)+10, -chSize[1]/2), ((-chSize[0]/2)+10, (-chSize[1]/2)-(2*wheelSB)), (0, 0))
         self.bwJntS = pymunk.constraint.DampedSpring(self.carBody, self.whBdyB, ((
-            -chSize[0]/2)+10, -chSize[1]/2), (0, 0), 2*wheelS, whstiff, whdamp)
+            -chSize[0]/2)+10, -chSize[1]/2), (0, 0), 2*wheelSB, whstiff, whdamp)
         self.bwmot = pymunk.constraint.SimpleMotor(
             self.whBdyB, space.static_body, inSpeed)
         self.ls.append((self.whBdyB, self.wShapeB, self.bwJntG, self.bwJntS))
@@ -127,6 +162,19 @@ class Car:
 
         # space object add
         space.add(self.ls)
+
+    def carTransp(self, xPos):
+        constr = [self.bwJntG,self.fwJntG,self.bwJntS,self.fwJntS]
+        space.remove(constr)
+        carVel = self.carBody.velocity
+        whVel = self.whBdyB.velocity,self.whBdyF.velocity
+        self.carBody.position = (xPos,self.carBody.position[1])
+        self.whBdyB.position = (xPos - 40,self.whBdyB.position[1])
+        self.whBdyF.position = (xPos + 40,self.whBdyF.position[1])
+        self.carBody.velocity = carVel
+        self.whBdyB.velocity = whVel[0]
+        self.whBdyF.velocity = whVel[1]
+        space.add(constr)
 
     def air_land_trans(self, a2l):
         if a2l:
@@ -180,28 +228,38 @@ class Car:
 
 class Terrain:
 
-    def __init__(self, lent, octaves=1, lacunarity=2, persistence=0.5, friction=0.9):
+    def __init__(self, lent, octaves=1, lacunarity=2, persistence=0.5, friction=0.9,elasticity = 0.5,color = grassCol):
         self.tLis = self.terra(lent, octaves, lacunarity, persistence)
-        noSegs = len(self.tLis)
-        for j in range(noSegs-1):
-            seg = pymunk.Segment(
-                space.static_body, self.tLis[j], self.tLis[j+1], 5)
-            seg.friction = friction
-            seg.elasticity = 0.5
-            space.add(seg)
+        self.fric = friction
+        self.elas = elasticity
+        self.currSps = []
+        self.color = color
+        self.terraDraw(0,900)
+        
 
     def terra(self, leng, octaves, lacunarity, persistence):
-        ls = [(0, 10), (100, 10)]
+        ls = []
 
-        # file
-        # file = open('test.txt','w')
-
-        for i in range(110, leng+100, 10):
-            # j = r.randint(10, 80)
+       
+        for i in range(0, 2*leng+100, 10):
             jt = (noise.pnoise1(i/1000, octaves=octaves,
                                 lacunarity=lacunarity, persistence=persistence))
             j = jt*100+100
-            # file.write('{:.2f}\t{:.3f}\n'.format(j,jt))
             ls.append((i, j))
-        # file.close()
         return ls
+
+    def terraDraw(self,startPoint,endPoint):
+        self.currSps.clear()
+        for j in range(startPoint,endPoint):
+            xoff = startPoint*10
+            seg = pymunk.Segment(
+                space.static_body, (self.tLis[j][0]-xoff,self.tLis[j][1]), (self.tLis[j+1][0]-xoff,self.tLis[j+1][1]), 5)
+            seg.friction = self.fric
+            seg.elasticity = self.elas
+            seg.color = self.color
+            self.currSps.append(seg)
+        space.add(self.currSps)
+
+    def terrUpdate(self):
+        space.remove(self.currSps)
+        self.terraDraw(791,1600)
