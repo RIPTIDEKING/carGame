@@ -22,6 +22,7 @@ def cusEve(temp, camera):
     global changle, tempmax, trqt
 
     #sprit handle
+    app.terrainDraw(terrain)
     app.spritHand(tire,car1.whBdyB)
     app.spritHand(tire,car1.whBdyF)
     app.spritHand(chasis,car1.carBody)
@@ -31,9 +32,10 @@ def cusEve(temp, camera):
     car1.carBody.torque = car1.torqNeed
     car1.whBdyB.torque = trqt
 
-    print(camera[0],car1.whBdyB.position)
     if car1.carBody.position[0] >= 8000:
         print(car1.carBody.position)
+        terrain.stPnt = 791
+        terrain.edPnt = 1700
         terrain.terrUpdate()
         car1.carTransp(90)
         
@@ -88,7 +90,7 @@ def cusEve(temp, camera):
 # driver code
 spaList = []
 
-car1 = Car((250, 250),whFric=1.5,moment=10,color = (250,250,250))
+car1 = Car((250, 250),whFric=1.5,moment=10)
 # car1.bwmot.max_force = 5
     
 tlength = 10000

@@ -21,14 +21,15 @@ steps = 50*sSpeed
 mfps = 100
 
 
-#colors
-fWhite = (250,250,250)
-white = (255,255,255)
-black = (10,10,10)
-red = (250,0,0)
-green = (0,250,0)
-blue = (0,0,250)
-grassCol = (86,125,70)
+# colors
+fWhite = (250, 250, 250)
+white = (255, 255, 255)
+black = (10, 10, 10)
+red = (250, 0, 0)
+green = (0, 250, 0)
+blue = (0, 0, 250)
+grassCol = (126, 200, 80)
+skyCol = (135,206,235)
 
 
 # images
@@ -45,7 +46,7 @@ class App:
         self.atulSize = (aL, aH)
         self.backGround = pygame.Surface(self.atulSize)
         self.drawOptions = pymunk.pygame_util.DrawOptions(self.backGround)
-        # self.drawOptions.flags = pymunk.SpaceDebugDrawOptions.DRAW_SHAPES
+        self.drawOptions.flags = pymunk.SpaceDebugDrawOptions.DRAW_SHAPES
         self.running = True
         self.clock = pygame.time.Clock()
         self.custEvent = None
@@ -59,6 +60,15 @@ class App:
         rect = spt.get_rect()
         rect.center = (bdy.position[0], self.screenSize[1]-bdy.position[1])
         self.backGround.blit(spt, rect)
+
+
+    def terrainDraw(self,terr):
+        #ground
+        
+        for j in range(terr.stPnt, terr.edPnt):
+            xoff = terr.stPnt*10
+            te1 = pygame.draw.polygon(self.backGround, (202,189,102),[(terr.tLis[j][0]-xoff, 500-terr.tLis[j][1]), (terr.tLis[j+1][0] - xoff, 500-terr.tLis[j+1][1]), (terr.tLis[j+1][0]-xoff, 500), (terr.tLis[j][0]-xoff, 500)])
+            # te1.color = (202,189,102)
 
     def event_handler(self, event):
         global sSpeed
@@ -81,7 +91,7 @@ class App:
         while self.running:
             temp = pygame.event.get()
             self.screen.fill((250, 250, 250))
-            self.backGround.fill((250, 250, 250))
+            self.backGround.fill(skyCol)
             space.debug_draw(self.drawOptions)
 
             for event in temp:
@@ -106,7 +116,7 @@ class App:
 
 class Car:
 
-    def __init__(self, pos, weight=10, inSpeed=0, wheelW=10, whElast=0.2, whFric=0.9, wheelSF=10, wheelSB=10, wheelM=1, moment=100, color=(200, 200, 250), chSize=(100, 50), whstiff=14, whdamp=5):
+    def __init__(self, pos, weight=10, inSpeed=0, wheelW=10, whElast=0.2, whFric=0.9, wheelSF=10, wheelSB=10, wheelM=1, moment=100, color=skyCol, chSize=(100, 50), whstiff=14, whdamp=5):
 
         self.ls = []
 
@@ -164,13 +174,13 @@ class Car:
         space.add(self.ls)
 
     def carTransp(self, xPos):
-        constr = [self.bwJntG,self.fwJntG,self.bwJntS,self.fwJntS]
+        constr = [self.bwJntG, self.fwJntG, self.bwJntS, self.fwJntS]
         space.remove(constr)
         carVel = self.carBody.velocity
-        whVel = self.whBdyB.velocity,self.whBdyF.velocity
-        self.carBody.position = (xPos,self.carBody.position[1])
-        self.whBdyB.position = (xPos - 40,self.whBdyB.position[1])
-        self.whBdyF.position = (xPos + 40,self.whBdyF.position[1])
+        whVel = self.whBdyB.velocity, self.whBdyF.velocity
+        self.carBody.position = (xPos, self.carBody.position[1])
+        self.whBdyB.position = (xPos - 40, self.whBdyB.position[1])
+        self.whBdyF.position = (xPos + 40, self.whBdyF.position[1])
         self.carBody.velocity = carVel
         self.whBdyB.velocity = whVel[0]
         self.whBdyF.velocity = whVel[1]
@@ -228,19 +238,19 @@ class Car:
 
 class Terrain:
 
-    def __init__(self, lent, octaves=1, lacunarity=2, persistence=0.5, friction=0.9,elasticity = 0.5,color = grassCol):
+    def __init__(self, lent, octaves=1, lacunarity=2, persistence=0.5, friction=0.9, elasticity=0.5, color=grassCol):
+        self.stPnt = 0
+        self.edPnt = 900
         self.tLis = self.terra(lent, octaves, lacunarity, persistence)
         self.fric = friction
         self.elas = elasticity
         self.currSps = []
         self.color = color
-        self.terraDraw(0,900)
-        
+        self.terraDraw()
 
     def terra(self, leng, octaves, lacunarity, persistence):
         ls = []
 
-       
         for i in range(0, 2*leng+100, 10):
             jt = (noise.pnoise1(i/1000, octaves=octaves,
                                 lacunarity=lacunarity, persistence=persistence))
@@ -248,12 +258,12 @@ class Terrain:
             ls.append((i, j))
         return ls
 
-    def terraDraw(self,startPoint,endPoint):
+    def terraDraw(self):
         self.currSps.clear()
-        for j in range(startPoint,endPoint):
-            xoff = startPoint*10
+        for j in range(self.stPnt, self.edPnt):
+            xoff = self.stPnt*10
             seg = pymunk.Segment(
-                space.static_body, (self.tLis[j][0]-xoff,self.tLis[j][1]), (self.tLis[j+1][0]-xoff,self.tLis[j+1][1]), 5)
+                space.static_body, (self.tLis[j][0]-xoff, self.tLis[j][1]), (self.tLis[j+1][0]-xoff, self.tLis[j+1][1]), 5)
             seg.friction = self.fric
             seg.elasticity = self.elas
             seg.color = self.color
@@ -262,4 +272,4 @@ class Terrain:
 
     def terrUpdate(self):
         space.remove(self.currSps)
-        self.terraDraw(791,1600)
+        self.terraDraw()
