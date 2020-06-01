@@ -9,6 +9,7 @@ import math
 trqt = 0
 changle = 0
 tempmax = 0
+stgCnt = 1
 
 segType =type(pymunk.Segment(None,(0,0),(0,0),0))
 
@@ -19,7 +20,7 @@ def air_land(las,curr):
 
 
 def cusEve(temp, camera):
-    global changle, tempmax, trqt
+    global changle, tempmax, trqt ,stgCnt
 
     #sprit handle
     app.terrainDraw(terrain)
@@ -32,12 +33,20 @@ def cusEve(temp, camera):
     car1.carBody.torque = car1.torqNeed
     car1.whBdyB.torque = trqt
 
-    if car1.carBody.position[0] >= 8000:
-        print(car1.carBody.position)
-        terrain.stPnt = 791
-        terrain.edPnt = 1700
+    # print(car1.carBody.position)
+        
+    # if car1.carBody.position[0] >= 4000:
+    #     print(car1.carBody.position)
+    #     terrain.stPnt = 391
+    #     terrain.edPnt = 700
+    #     terrain.terrUpdate()
+    #     car1.carTransp(90)
+    if car1.carBody.position[0] >= 2200:
+        print(stgCnt)
+        stgCnt += 1
         terrain.terrUpdate()
-        car1.carTransp(90)
+        car1.carTransp(200)
+    
         
     
     lisb = space.bb_query(car1.wShapeB.bb,car1.wShapeB.filter)
@@ -96,7 +105,7 @@ car1 = Car((250, 250),whFric=1.5,moment=10)
 tlength = 10000
 
 space.add(spaList)
-terrain = Terrain(tlength,persistence= 1.8,lacunarity=5.0,octaves=2)
+terrain = Terrain(persistence= 1.8,lacunarity=5.0,octaves=2)
 app = App(sH=height, aH=height,aL=tlength)
 app.custEvent = cusEve
 app.run()
