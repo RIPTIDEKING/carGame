@@ -24,23 +24,20 @@ def cusEve(temp, camera):
 
     #sprit handle
     app.terrainDraw(terrain)
-    app.spritHand(tire,car1.whBdyB)
-    app.spritHand(tire,car1.whBdyF)
     app.spritHand(chasis,car1.carBody)
+    app.spritHand(tire,car1.whBdyB,(26,26))
+    app.spritHand(tire,car1.whBdyF,(26,26))
+    
 
     # camera
     camera[0] = -car1.carBody.position[0] + 90
+    # camera[1] = car1.carBody.position[1]-250
+
     car1.carBody.torque = car1.torqNeed
     car1.whBdyB.torque = trqt
 
     # print(car1.carBody.position)
-        
-    # if car1.carBody.position[0] >= 4000:
-    #     print(car1.carBody.position)
-    #     terrain.stPnt = 391
-    #     terrain.edPnt = 700
-    #     terrain.terrUpdate()
-    #     car1.carTransp(90)
+
     if car1.carBody.position[0] >= 2200:
         print(stgCnt)
         stgCnt += 1
@@ -71,8 +68,11 @@ def cusEve(temp, camera):
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_b:
+                bdy = pymunk.Body(10,10)
+                shp = pymunk.Circle(bdy,10)
                 bdy.position = 198, 250
                 bdy.velocity = pymunk.Vec2d(0, 0)
+                space.add(bdy,shp)
             elif event.key == pygame.K_SPACE:
                 car1.carDes()
                 car1.__init__((250, 250))
@@ -99,13 +99,13 @@ def cusEve(temp, camera):
 # driver code
 spaList = []
 
-car1 = Car((250, 250),whFric=1.5,moment=10)
+car1 = Car((250, 250),whFric=1.5,moment=10,whstiff=5)
 # car1.bwmot.max_force = 5
     
-tlength = 10000
-
+tlength = 3000
+carNomSpeed = 1
 space.add(spaList)
-terrain = Terrain(persistence= 1.8,lacunarity=5.0,octaves=2)
-app = App(sH=height, aH=height,aL=tlength)
+terrain = Terrain(persistence= 1.8,lacunarity=5,octaves=2)
+app = App(sH=height, aH=500,aL=tlength)
 app.custEvent = cusEve
 app.run()

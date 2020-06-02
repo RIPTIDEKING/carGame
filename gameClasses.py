@@ -17,6 +17,7 @@ space.gravity = 0, -9.8
 fps = 40
 sSpeed = 10
 steps = 50*sSpeed
+carNomSpeed = 2
 
 mfps = 100
 
@@ -29,12 +30,12 @@ red = (250, 0, 0)
 green = (0, 250, 0)
 blue = (0, 0, 250)
 grassCol = (126, 200, 80)
-skyCol = (135,206,235)
-lightGround = (202,189,102)
-lightGroundD = (152,139,52)
+skyCol = (135, 206, 235)
+lightGround = (202, 189, 102)
+lightGroundD = (152, 139, 52)
 
 # images
-tire = pygame.image.load("res/tireMade.png")
+tire = pygame.image.load("res/crc.png")
 chasis = pygame.image.load("res/chasis.png")
 
 
@@ -62,21 +63,22 @@ class App:
         rect.center = (bdy.position[0], self.screenSize[1]-bdy.position[1])
         self.backGround.blit(spt, rect)
 
+    def terrainDraw(self, terr):
+        # ground
 
-    def terrainDraw(self,terr):
-        #ground
-        
         for j in range(terr.stPnt, terr.edPnt):
             xoff = terr.rstPnt*10
-            recPoint = [(terr.tLis[j][0]-xoff, 500-terr.tLis[j][1]), (terr.tLis[j+1][0] - xoff, 500-terr.tLis[j+1][1]), (terr.tLis[j+1][0]-xoff, 500), (terr.tLis[j][0]-xoff, 500)]
-            te1 = pygame.draw.polygon(self.backGround, lightGround,recPoint)
-            self.grad(lightGroundD,lightGround,recPoint,forcedHeight=30,stepDraw=3)
-            
+            recPoint = [(terr.tLis[j][0]-xoff, 500-terr.tLis[j][1]), (terr.tLis[j+1][0] - xoff,
+                                                                      500-terr.tLis[j+1][1]), (terr.tLis[j+1][0]-xoff, 700), (terr.tLis[j][0]-xoff, 700)]
+            te1 = pygame.draw.polygon(self.backGround, lightGround, recPoint)
+            self.grad(lightGroundD, lightGround, recPoint,
+                      forcedHeight=30, stepDraw=3)
+
     def event_handler(self, event):
         global sSpeed
         if event.type == pygame.QUIT:
             self.running = False
-            pygame.image.save(self.screen, 'intro.png')
+            pygame.image.save(self.backGround, 'intro.png')
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_i:
                 sSpeed = sSpeed+1
@@ -87,21 +89,23 @@ class App:
             elif event.key == pygame.K_f:
                 sSpeed = 10
 
-    def grad(self,stCol,edCol,polInfo,stepDraw = 2,forcedHeight = 0):
+    def grad(self, stCol, edCol, polInfo, stepDraw=2, forcedHeight=0):
         if forcedHeight == 0:
-            height = (min(polInfo[2][1],polInfo[3][1])-max(polInfo[0][1],polInfo[1][1]))
+            height = (min(polInfo[2][1], polInfo[3][1]) -
+                      max(polInfo[0][1], polInfo[1][1]))
         else:
             height = forcedHeight
-        sr,sg,sb = stCol
-        er,eg,eb = edCol
+        sr, sg, sb = stCol
+        er, eg, eb = edCol
         stp = 1/height
-        colStp = ((er-sr)*stp,(eg-sg)*stp,(eb-sb)*stp)
+        colStp = ((er-sr)*stp, (eg-sg)*stp, (eb-sb)*stp)
         col = stCol
         height = int(round(height))+1
-        for i in range(0,height,stepDraw):
-            pygame.draw.polygon(self.backGround, col, [(polInfo[0][0],polInfo[0][1]+i),(polInfo[1][0],polInfo[1][1]+i),(polInfo[1][0],polInfo[1][1]+i+stepDraw),(polInfo[0][0],polInfo[0][1]+i+stepDraw)])
-            col = (col[0]+colStp[0]*stepDraw,col[1]+colStp[1]*stepDraw,col[2]+colStp[2]*stepDraw)
-
+        for i in range(0, height, stepDraw):
+            pygame.draw.polygon(self.backGround, col, [(polInfo[0][0], polInfo[0][1]+i), (polInfo[1][0], polInfo[1]
+                                                                                          [1]+i), (polInfo[1][0], polInfo[1][1]+i+stepDraw), (polInfo[0][0], polInfo[0][1]+i+stepDraw)])
+            col = (col[0]+colStp[0]*stepDraw, col[1]+colStp[1]
+                   * stepDraw, col[2]+colStp[2]*stepDraw)
 
     def run(self):
         global mfps
@@ -110,12 +114,13 @@ class App:
             temp = pygame.event.get()
             self.screen.fill((250, 250, 250))
             self.backGround.fill(skyCol)
-            space.debug_draw(self.drawOptions)
+            # space.debug_draw(self.drawOptions)
 
-            for event in temp:
-                self.event_handler(event)
+            
             if not self.custEvent == None:
                 self.custEvent(temp, camera)
+            for event in temp:
+                self.event_handler(event)
 
             self.screen.blit(self.backGround, camera)
             pygame.display.set_caption(
@@ -135,6 +140,9 @@ class App:
 class Car:
 
     def __init__(self, pos, weight=10, inSpeed=0, wheelW=10, whElast=0.2, whFric=0.9, wheelSF=10, wheelSB=10, wheelM=1, moment=100, color=skyCol, chSize=(100, 50), whstiff=14, whdamp=5):
+
+        self.whSb = self.whSf = self.whoff = 13
+        
 
         self.ls = []
 
@@ -159,34 +167,38 @@ class Car:
         # car Front Wheel
         self.whBdyF = pymunk.Body(wheelW, moment=wheelM)
         self.whBdyF.position = pos[0] + \
-            (chSize[0]/2)-10, pos[1]+(-chSize[1]/2)-2*wheelSF
-        self.wShapeF = pymunk.Circle(self.whBdyF, wheelSF)
+            (chSize[0]/2)-self.whoff, pos[1]+(-chSize[1]/2)-2*wheelSF
+        self.wShapeF = pymunk.Circle(self.whBdyF, self.whSf)
         self.wShapeF.elasticity = whElast
         self.wShapeF.friction = whFric
         self.fwJntG = pymunk.constraint.GrooveJoint(
-            self.carBody, self.whBdyF, ((chSize[0]/2)-10, -chSize[1]/2), ((chSize[0]/2)-10, (-chSize[1]/2)-(2*wheelSF)), (0, 0))
+            self.carBody, self.whBdyF, ((chSize[0]/2)-self.whoff, -chSize[1]/2), ((chSize[0]/2)-self.whoff, (-chSize[1]/2)-(2*wheelSF)), (0, 0))
         self.fwJntS = pymunk.constraint.DampedSpring(self.carBody, self.whBdyF, ((
-            chSize[0]/2)-10, -chSize[1]/2), (0, 0), 2*wheelSF, whstiff, whdamp)
+            chSize[0]/2)-self.whoff, -chSize[1]/2), (0, 0), 2*wheelSF, whstiff, whdamp)
 
         self.ls.append((self.whBdyF, self.wShapeF, self.fwJntG, self.fwJntS))
 
         # car Back Wheel
         self.whBdyB = pymunk.Body(wheelW, moment=10)
         self.whBdyB.position = pos[0] + \
-            (-chSize[0]/2)+10, pos[1]+(-chSize[1]/2)-2*wheelSB
-        self.wShapeB = pymunk.Circle(self.whBdyB, wheelSB)
+            (-chSize[0]/2)+self.whoff, pos[1]+(-chSize[1]/2)-2*wheelSB
+        self.wShapeB = pymunk.Circle(self.whBdyB, self.whSb)
         self.wShapeB.elasticity = whElast
         self.wShapeB.friction = whFric
         self.bwJntG = pymunk.constraint.GrooveJoint(
-            self.carBody, self.whBdyB, ((-chSize[0]/2)+10, -chSize[1]/2), ((-chSize[0]/2)+10, (-chSize[1]/2)-(2*wheelSB)), (0, 0))
+            self.carBody, self.whBdyB, ((-chSize[0]/2)+self.whoff, -chSize[1]/2), ((-chSize[0]/2)+self.whoff, (-chSize[1]/2)-(2*wheelSB)), (0, 0))
         self.bwJntS = pymunk.constraint.DampedSpring(self.carBody, self.whBdyB, ((
-            -chSize[0]/2)+10, -chSize[1]/2), (0, 0), 2*wheelSB, whstiff, whdamp)
+            -chSize[0]/2)+self.whoff, -chSize[1]/2), (0, 0), 2*wheelSB, whstiff, whdamp)
         self.bwmot = pymunk.constraint.SimpleMotor(
             self.whBdyB, space.static_body, inSpeed)
         self.ls.append((self.whBdyB, self.wShapeB, self.bwJntG, self.bwJntS))
 
         self.bwJntG.max_force = 1000
         self.fwJntG.max_force = 1000
+
+        spFil = pymunk.ShapeFilter(1)
+        self.chs.filter = spFil
+        self.wShapeB.filter = self.wShapeF.filter = spFil
 
         # space object add
         space.add(self.ls)
@@ -205,7 +217,6 @@ class Car:
         self.whBdyB.velocity = whVel[0]
         self.whBdyF.velocity = whVel[1]
         space.add(constr)
-        
 
     def air_land_trans(self, a2l):
         if a2l:
@@ -249,9 +260,9 @@ class Car:
             else:
                 space.add(self.bwmot)
             if dir == 1:
-                self.bwmot.rate = 2
+                self.bwmot.rate = carNomSpeed
             elif dir == -1:
-                self.bwmot.rate = -2
+                self.bwmot.rate = -carNomSpeed
 
     def carDes(self):
         space.remove(self.ls)
@@ -302,15 +313,14 @@ class Terrain:
         self.edPnt += 200
         if(self.stPnt == 1800):
             self.terrUpdateHelp()
-        print(self.stPnt,self.edPnt)
+        print(self.stPnt, self.edPnt)
         space.remove(self.currSps)
         self.terraDraw()
-    
+
     def terrUpdateHelp(self):
         self.stPnt = 0
         self.edPnt = 300
-        self.offSet += 21000
+        self.offSet = self.tLis[-1][0]
         self.tLis = self.tLis[1800:]
         self.tLis = self.tLis + self.terra()[:1800]
-        print(self.tLis)
-
+        
